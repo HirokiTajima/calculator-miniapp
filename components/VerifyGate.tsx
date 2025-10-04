@@ -7,7 +7,6 @@ export default function VerifyGate({ children }: { children: React.ReactNode }) 
   const [isInstalled, setIsInstalled] = useState(false);
   const [isChecking, setIsChecking] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userAddress, setUserAddress] = useState<string | null>(null);
 
   useEffect(() => {
     // Check if already authenticated
@@ -15,8 +14,7 @@ export default function VerifyGate({ children }: { children: React.ReactNode }) 
       const savedAuth = localStorage.getItem('wallet_auth');
       if (savedAuth) {
         try {
-          const authData = JSON.parse(savedAuth);
-          setUserAddress(authData.address);
+          JSON.parse(savedAuth);
           setOk(true);
         } catch (e) {
           console.error('Failed to parse saved auth:', e);
@@ -83,7 +81,6 @@ export default function VerifyGate({ children }: { children: React.ReactNode }) 
           timestamp: Date.now(),
         };
         localStorage.setItem('wallet_auth', JSON.stringify(authData));
-        setUserAddress(payload.address);
         setOk(true);
       } else if (payload.status === 'error') {
         // Error response from WalletAuth

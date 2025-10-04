@@ -15,7 +15,7 @@ function formatNumber(numStr: string): string {
   if (isNaN(num)) return numStr;
 
   // Remove trailing zeros and decimal point if not needed
-  let str = numStr.replace(/\.?0+$/, "");
+  const str = numStr.replace(/\.?0+$/, "");
 
   // Count significant digits (excluding minus sign and decimal point)
   const digits = str.replace(/[-.]|^0+/g, "");
