@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import { create, all } from "mathjs";
 
