@@ -4,7 +4,7 @@ import { create, all } from "mathjs";
 
 const math = create(all, {});
 
-function addCommas(numStr) {
+function addCommas(numStr: string): string {
   if (!/^[-+]?\d+(?:\.\d+)?$/.test(numStr)) return numStr;
   const neg = numStr.startsWith("-");
   const n = neg ? numStr.slice(1) : numStr;
@@ -13,21 +13,21 @@ function addCommas(numStr) {
   return (neg ? "-" : "") + withCommas + (d ? "." + d : "");
 }
 
-function formatExpr(expr) {
+function formatExpr(expr: string): string {
   if (!expr) return "0";
   if (expr === "Error") return "Error";
-  return expr.replace(/(^|[^A-Za-z0-9_])(-?\d+(?:\.\d+)?)/g, (_, pre, num) => pre + addCommas(num));
+  return expr.replace(/(^|[^A-Za-z0-9_])(-?\d+(?:\.\d+)?)/g, (_: string, pre: string, num: string) => pre + addCommas(num));
 }
 
 export default function Calculator() {
-  const [expr, setExpr] = useState("");
-  const [history, setHistory] = useState([]);
+  const [expr, setExpr] = useState<string>("");
+  const [history, setHistory] = useState<string[]>([]);
 
   function evaluateExpression() {
     try {
       const scope = {
-        ln: (x) => Math.log(x),
-        log: (x) => Math.log10(x),
+        ln: (x: number) => Math.log(x),
+        log: (x: number) => Math.log10(x),
         pi: Math.PI,
         e: Math.E,
       };
@@ -40,19 +40,9 @@ export default function Calculator() {
     }
   }
 
-  const push = (s) => setExpr((p) => p + s);
+  const push = (s: string) => setExpr((p) => p + s);
   const clearAll = () => setExpr("");
   const backspace = () => setExpr((p) => (p ? p.slice(0, -1) : ""));
-
-  const toggleSign = () => {
-    setExpr((p) => {
-      const m = /(-?\d+(?:\.\d+)?)\s*$/.exec(p);
-      if (!m) return p || "";
-      const start = m.index;
-      const num = m[1];
-      return p.slice(0, start) + (num.startsWith("-") ? num.slice(1) : "-" + num);
-    });
-  };
 
   const percent = () => {
     setExpr((p) => {
@@ -64,7 +54,7 @@ export default function Calculator() {
     });
   };
 
-  const Btn = ({ children, onClick, variant = "neutral" }) => {
+  const Btn = ({ children, onClick, variant = "neutral" }: { children: React.ReactNode; onClick: () => void; variant?: "neutral" | "op" | "num" | "accent" | "warn" | "func" | "clear" }) => {
     const base =
       "select-none rounded-lg text-lg font-semibold shadow-sm active:translate-y-px transition-colors";
     const styles = {
