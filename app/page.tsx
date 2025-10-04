@@ -34,7 +34,7 @@ function formatNumber(numStr: string): string {
     const maxDecimalPlaces = Math.max(0, 20 - intPart.length);
     const rounded = num.toFixed(maxDecimalPlaces);
     const [, newDecPart] = rounded.split(".");
-    finalDecPart = newDecPart ? newDecPart.replace(/0+$/, "") : undefined;
+    finalDecPart = newDecPart ? newDecPart.replace(/0+$/, "") : "";
   }
 
   // Add commas for integer part
