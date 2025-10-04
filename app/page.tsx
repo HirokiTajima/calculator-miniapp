@@ -4,10 +4,31 @@ import { create, all } from "mathjs";
 
 const math = create(all, {});
 
-function addCommas(numStr: string): string {
+function formatNumber(numStr: string): string {
+  // Check if it's already in scientific notation
+  if (/e[+-]?\d+/i.test(numStr)) return numStr;
+
+  // Check if it's a valid number
   if (!/^[-+]?\d+(?:\.\d+)?$/.test(numStr)) return numStr;
-  const neg = numStr.startsWith("-");
-  const n = neg ? numStr.slice(1) : numStr;
+
+  const num = parseFloat(numStr);
+  if (isNaN(num)) return numStr;
+
+  // Remove trailing zeros and decimal point if not needed
+  let str = numStr.replace(/\.?0+$/, "");
+
+  // Count significant digits (excluding minus sign and decimal point)
+  const digits = str.replace(/[-.]|^0+/g, "");
+
+  // If more than 13 digits, use scientific notation
+  if (digits.length > 13) {
+    // Use 6 significant figures in scientific notation
+    return num.toExponential(6).replace(/\.?0+e/, "e");
+  }
+
+  // Add commas for regular numbers
+  const neg = str.startsWith("-");
+  const n = neg ? str.slice(1) : str;
   const [i, d] = n.split(".");
   const withCommas = i.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   return (neg ? "-" : "") + withCommas + (d ? "." + d : "");
@@ -16,7 +37,7 @@ function addCommas(numStr: string): string {
 function formatExpr(expr: string): string {
   if (!expr) return "0";
   if (expr === "Error") return "Error";
-  return expr.replace(/(^|[^A-Za-z0-9_])(-?\d+(?:\.\d+)?)/g, (_: string, pre: string, num: string) => pre + addCommas(num));
+  return expr.replace(/(^|[^A-Za-z0-9_])(-?\d+(?:\.\d+)?(?:e[+-]?\d+)?)/gi, (_: string, pre: string, num: string) => pre + formatNumber(num));
 }
 
 export default function Calculator() {
@@ -32,7 +53,17 @@ export default function Calculator() {
         e: Math.E,
       };
       const res = math.evaluate(expr, scope);
-      const resultStr = String(res);
+      let resultStr = String(res);
+
+      // Check if result needs scientific notation
+      const num = parseFloat(resultStr);
+      if (!isNaN(num)) {
+        const digits = resultStr.replace(/[-.]|^0+|e[+-]?\d+/gi, "");
+        if (digits.length > 13) {
+          resultStr = num.toExponential(6).replace(/\.?0+e/, "e");
+        }
+      }
+
       setHistory((prev) => [...prev, `${expr}=${resultStr}`].slice(-3));
       setExpr(resultStr);
     } catch {
