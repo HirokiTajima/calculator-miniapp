@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Read(//c/Users/tajim/simplememo/app/**)",
+      "Read(//c/Users/tajim/simplememo/components/**)",
+      "Read(//c/Users/tajim/simplememo/**)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

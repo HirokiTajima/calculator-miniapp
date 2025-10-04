@@ -1,8 +1,38 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Calculator MiniApp
+
+A World App MiniApp calculator with World ID wallet authentication.
+
+## Prerequisites
+
+Before running this application, you need to:
+
+1. Create a World App MiniApp at [World Developer Portal](https://developer.worldcoin.org/)
+2. Get your `APP_ID` from the portal
+3. Create a `.env.local` file in the root directory (see `.env.example`)
+
+## Environment Variables
+
+Create a `.env.local` file with the following variable:
+
+```
+NEXT_PUBLIC_APP_ID=your_world_app_id_here
+```
+
+Replace `your_world_app_id_here` with your actual World App ID from the developer portal.
 
 ## Getting Started
 
-First, run the development server:
+First, install dependencies:
+
+```bash
+npm install
+# or
+yarn install
+# or
+pnpm install
+```
+
+Then, run the development server:
 
 ```bash
 npm run dev
@@ -16,9 +46,13 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Features
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **World ID Wallet Authentication**: Uses MiniKit's `walletAuth` command for secure authentication
+- **Device Level Verification**: No Orb verification required
+- **Persistent Authentication**: Auth data stored in localStorage for 7 days
+- **Scientific Calculator**: Full-featured calculator with trigonometric, logarithmic, and algebraic functions
+- **Responsive UI**: Modern, mobile-friendly interface with Tailwind CSS
 
 ## Learn More
 
