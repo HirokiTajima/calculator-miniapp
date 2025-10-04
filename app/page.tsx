@@ -17,21 +17,29 @@ function formatNumber(numStr: string): string {
   // Remove trailing zeros and decimal point if not needed
   const str = numStr.replace(/\.?0+$/, "");
 
-  // Count significant digits (excluding minus sign and decimal point)
-  const digits = str.replace(/[-.]|^0+/g, "");
+  const neg = str.startsWith("-");
+  const n = neg ? str.slice(1) : str;
+  const [intPart, decPart] = n.split(".");
 
-  // If more than 13 digits, use scientific notation
-  if (digits.length > 13) {
-    // Use 6 significant figures in scientific notation
+  // Use scientific notation only if integer part exceeds 13 digits
+  if (intPart.length > 13) {
     return num.toExponential(6).replace(/\.?0+e/, "e");
   }
 
-  // Add commas for regular numbers
-  const neg = str.startsWith("-");
-  const n = neg ? str.slice(1) : str;
-  const [i, d] = n.split(".");
-  const withCommas = i.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  return (neg ? "-" : "") + withCommas + (d ? "." + d : "");
+  // If total length exceeds 20 digits, round the decimal part
+  const totalLength = intPart.length + (decPart ? decPart.length : 0);
+  let finalDecPart = decPart;
+
+  if (totalLength > 20 && decPart) {
+    const maxDecimalPlaces = Math.max(0, 20 - intPart.length);
+    const rounded = num.toFixed(maxDecimalPlaces);
+    const [, newDecPart] = rounded.split(".");
+    finalDecPart = newDecPart ? newDecPart.replace(/0+$/, "") : undefined;
+  }
+
+  // Add commas for integer part
+  const withCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return (neg ? "-" : "") + withCommas + (finalDecPart ? "." + finalDecPart : "");
 }
 
 function formatExpr(expr: string): string {
@@ -55,11 +63,12 @@ export default function Calculator() {
       const res = math.evaluate(expr, scope);
       let resultStr = String(res);
 
-      // Check if result needs scientific notation
+      // Check if result needs scientific notation (only for large integers)
       const num = parseFloat(resultStr);
       if (!isNaN(num)) {
-        const digits = resultStr.replace(/[-.]|^0+|e[+-]?\d+/gi, "");
-        if (digits.length > 13) {
+        const [intPart] = resultStr.split(".");
+        const cleanIntPart = intPart.replace(/^[-+]?/, "");
+        if (cleanIntPart.length > 13) {
           resultStr = num.toExponential(6).replace(/\.?0+e/, "e");
         }
       }
