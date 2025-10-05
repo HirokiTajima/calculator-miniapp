@@ -6,7 +6,11 @@ const math = create(all, {});
 
 function formatNumber(numStr: string): string {
   // Check if it's already in scientific notation
-  if (/e[+-]?\d+/i.test(numStr)) return numStr;
+  if (/e[+-]?\d+/i.test(numStr)) {
+    // Ensure scientific notation fits within 13 characters
+    const formatted = numStr;
+    return formatted.length <= 13 ? formatted : numStr.substring(0, 13);
+  }
 
   // Check if it's a valid number
   if (!/^[-+]?\d+(?:\.\d+)?$/.test(numStr)) return numStr;
@@ -15,25 +19,49 @@ function formatNumber(numStr: string): string {
   if (isNaN(num)) return numStr;
 
   const neg = num < 0;
-  const absStr = Math.abs(num).toString();
+  const absNum = Math.abs(num);
+  const absStr = absNum.toString();
   const [intPart, decPart] = absStr.split(".");
 
-  // Rule 1: If integer part exceeds 13 digits, use scientific notation
-  if (intPart.length > 13) {
-    return num.toExponential(6).replace(/\.?0+e/, "e");
+  // Calculate display length with commas
+  const numCommas = Math.floor((intPart.length - 1) / 3);
+  const intPartWithCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const signLength = neg ? 1 : 0;
+
+  // Calculate available space for decimal
+  const intDisplayLength = signLength + intPartWithCommas.length;
+  const dotLength = decPart ? 1 : 0;
+  const availableForDecimal = 13 - intDisplayLength - dotLength;
+
+  // If integer part alone (with sign and commas) exceeds 13 chars, use scientific notation
+  if (intDisplayLength > 13 || intPart.length > 10) {
+    // Try to fit scientific notation within 13 characters
+    let expDigits = 2;
+    let sigFigs = 5;
+    let formatted = num.toExponential(sigFigs).replace(/\.?0+e/, "e");
+
+    // Adjust if still too long
+    while (formatted.length > 13 && sigFigs > 1) {
+      sigFigs--;
+      formatted = num.toExponential(sigFigs).replace(/\.?0+e/, "e");
+    }
+
+    return formatted;
   }
 
-  // Rule 2: If decimal part exceeds 10 digits, round to 10 digits
-  let finalDecPart = decPart;
-  if (decPart && decPart.length > 10) {
-    const rounded = num.toFixed(10);
+  // Limit decimal part to available space
+  let finalDecPart = decPart || "";
+  if (availableForDecimal > 0 && finalDecPart.length > availableForDecimal) {
+    const rounded = absNum.toFixed(availableForDecimal);
     const [, newDecPart] = rounded.split(".");
     finalDecPart = newDecPart ? newDecPart.replace(/0+$/, "") : "";
+  } else if (availableForDecimal <= 0 && decPart) {
+    // Round to nearest integer if no space for decimal
+    const rounded = Math.round(num);
+    return formatNumber(rounded.toString());
   }
 
-  // Add commas for integer part
-  const withCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  return (neg ? "-" : "") + withCommas + (finalDecPart ? "." + finalDecPart : "");
+  return (neg ? "-" : "") + intPartWithCommas + (finalDecPart ? "." + finalDecPart : "");
 }
 
 function formatExpr(expr: string): string {
@@ -64,20 +92,10 @@ export default function Calculator() {
 
       let resultStr = String(res);
 
-      // Check if result needs formatting
-      const absStr = Math.abs(num).toString();
-      const [intPart, decPart] = absStr.split(".");
+      // Format the result to ensure it fits in 13 characters
+      const formatted = formatNumber(resultStr);
 
-      // Apply Rule 1: Integer part > 13 digits → scientific notation
-      if (intPart.length > 13) {
-        resultStr = num.toExponential(6).replace(/\.?0+e/, "e");
-      }
-      // Apply Rule 2: Decimal part > 10 digits → round to 10 digits
-      else if (decPart && decPart.length > 10) {
-        resultStr = num.toFixed(10).replace(/\.?0+$/, "");
-      }
-
-      setHistory((prev) => [...prev, `${expr}=${resultStr}`].slice(-3));
+      setHistory((prev) => [...prev, `${expr}=${formatted}`].slice(-3));
       setExpr(resultStr);
     } catch {
       setExpr("Error");
