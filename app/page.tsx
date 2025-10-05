@@ -14,25 +14,19 @@ function formatNumber(numStr: string): string {
   const num = parseFloat(numStr);
   if (isNaN(num)) return numStr;
 
-  // Remove trailing zeros and decimal point if not needed
-  const str = numStr.replace(/\.?0+$/, "");
+  const neg = num < 0;
+  const absStr = Math.abs(num).toString();
+  const [intPart, decPart] = absStr.split(".");
 
-  const neg = str.startsWith("-");
-  const n = neg ? str.slice(1) : str;
-  const [intPart, decPart] = n.split(".");
-
-  // Use scientific notation only if integer part exceeds 13 digits
+  // Rule 1: If integer part exceeds 13 digits, use scientific notation
   if (intPart.length > 13) {
     return num.toExponential(6).replace(/\.?0+e/, "e");
   }
 
-  // If total length exceeds 20 digits, round the decimal part
-  const totalLength = intPart.length + (decPart ? decPart.length : 0);
+  // Rule 2: If decimal part exceeds 10 digits, round to 10 digits
   let finalDecPart = decPart;
-
-  if (totalLength > 20 && decPart) {
-    const maxDecimalPlaces = Math.max(0, 20 - intPart.length);
-    const rounded = num.toFixed(maxDecimalPlaces);
+  if (decPart && decPart.length > 10) {
+    const rounded = num.toFixed(10);
     const [, newDecPart] = rounded.split(".");
     finalDecPart = newDecPart ? newDecPart.replace(/0+$/, "") : "";
   }
@@ -61,16 +55,26 @@ export default function Calculator() {
         e: Math.E,
       };
       const res = math.evaluate(expr, scope);
+      const num = parseFloat(String(res));
+
+      if (isNaN(num)) {
+        setExpr("Error");
+        return;
+      }
+
       let resultStr = String(res);
 
-      // Check if result needs scientific notation (only for large integers)
-      const num = parseFloat(resultStr);
-      if (!isNaN(num)) {
-        const [intPart] = resultStr.split(".");
-        const cleanIntPart = intPart.replace(/^[-+]?/, "");
-        if (cleanIntPart.length > 13) {
-          resultStr = num.toExponential(6).replace(/\.?0+e/, "e");
-        }
+      // Check if result needs formatting
+      const absStr = Math.abs(num).toString();
+      const [intPart, decPart] = absStr.split(".");
+
+      // Apply Rule 1: Integer part > 13 digits → scientific notation
+      if (intPart.length > 13) {
+        resultStr = num.toExponential(6).replace(/\.?0+e/, "e");
+      }
+      // Apply Rule 2: Decimal part > 10 digits → round to 10 digits
+      else if (decPart && decPart.length > 10) {
+        resultStr = num.toFixed(10).replace(/\.?0+$/, "");
       }
 
       setHistory((prev) => [...prev, `${expr}=${resultStr}`].slice(-3));
