@@ -4,12 +4,29 @@ import { create, all } from "mathjs";
 
 const math = create(all, {});
 
+// Count displayable characters (excluding . and ,)
+function countDisplayChars(str: string): number {
+  return str.replace(/[.,]/g, "").length;
+}
+
 function formatNumber(numStr: string): string {
   // Check if it's already in scientific notation
   if (/e[+-]?\d+/i.test(numStr)) {
-    // Ensure scientific notation fits within 13 characters
-    const formatted = numStr;
-    return formatted.length <= 13 ? formatted : numStr.substring(0, 13);
+    // Ensure scientific notation fits within 12 characters (excluding .)
+    const charCount = countDisplayChars(numStr);
+    if (charCount <= 12) return numStr;
+
+    // Need to reduce precision
+    const num = parseFloat(numStr);
+    let sigFigs = 5;
+    let formatted = num.toExponential(sigFigs).replace(/\.?0+e/, "e");
+
+    while (countDisplayChars(formatted) > 12 && sigFigs > 1) {
+      sigFigs--;
+      formatted = num.toExponential(sigFigs).replace(/\.?0+e/, "e");
+    }
+
+    return formatted;
   }
 
   // Check if it's a valid number
@@ -23,29 +40,28 @@ function formatNumber(numStr: string): string {
   const absStr = absNum.toString();
   const [intPart, decPart] = absStr.split(".");
 
-  // Calculate display length with commas
-  const intPartWithCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  // Count characters: sign + integer digits only (no commas, no decimal point)
   const signLength = neg ? 1 : 0;
+  const intCharCount = signLength + intPart.length;
 
-  // Calculate available space for decimal
-  const intDisplayLength = signLength + intPartWithCommas.length;
-  const dotLength = decPart ? 1 : 0;
-  const availableForDecimal = 13 - intDisplayLength - dotLength;
-
-  // If integer part alone (with sign and commas) exceeds 13 chars, use scientific notation
-  if (intDisplayLength > 13 || intPart.length > 10) {
-    // Try to fit scientific notation within 13 characters
+  // If integer part exceeds 12 chars (including sign), use scientific notation
+  if (intCharCount > 12) {
     let sigFigs = 5;
     let formatted = num.toExponential(sigFigs).replace(/\.?0+e/, "e");
 
-    // Adjust if still too long
-    while (formatted.length > 13 && sigFigs > 1) {
+    while (countDisplayChars(formatted) > 12 && sigFigs > 1) {
       sigFigs--;
       formatted = num.toExponential(sigFigs).replace(/\.?0+e/, "e");
     }
 
     return formatted;
   }
+
+  // Calculate available space for decimal (12 total - sign - integer digits)
+  const availableForDecimal = 12 - intCharCount;
+
+  // Format integer part with commas
+  const intPartWithCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 
   // Limit decimal part to available space
   let finalDecPart = decPart || "";
