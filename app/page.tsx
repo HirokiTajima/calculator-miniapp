@@ -24,7 +24,6 @@ function formatNumber(numStr: string): string {
   const [intPart, decPart] = absStr.split(".");
 
   // Calculate display length with commas
-  const numCommas = Math.floor((intPart.length - 1) / 3);
   const intPartWithCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   const signLength = neg ? 1 : 0;
 
@@ -36,7 +35,6 @@ function formatNumber(numStr: string): string {
   // If integer part alone (with sign and commas) exceeds 13 chars, use scientific notation
   if (intDisplayLength > 13 || intPart.length > 10) {
     // Try to fit scientific notation within 13 characters
-    let expDigits = 2;
     let sigFigs = 5;
     let formatted = num.toExponential(sigFigs).replace(/\.?0+e/, "e");
 
@@ -90,7 +88,7 @@ export default function Calculator() {
         return;
       }
 
-      let resultStr = String(res);
+      const resultStr = String(res);
 
       // Format the result to ensure it fits in 13 characters
       const formatted = formatNumber(resultStr);
